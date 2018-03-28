@@ -11,15 +11,12 @@ SOURCES
     src/application.vala
 
     src/dbus/login1.vala
-    src/dbus/network_manager.vala
-    src/dbus/network_manager_dbus_properties.vala
     src/dbus/upower.vala
 
     src/entity/account.vala
     src/entity/conversation.vala
     src/entity/encryption.vala
     src/entity/file_transfer.vala
-    src/entity/jid.vala
     src/entity/message.vala
     src/entity/settings.vala
 
@@ -41,6 +38,7 @@ SOURCES
     src/service/message_storage.vala
     src/service/module_manager.vala
     src/service/muc_manager.vala
+    src/service/notification_events.vala
     src/service/presence_manager.vala
     src/service/roster_manager.vala
     src/service/stream_interactor.vala

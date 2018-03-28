@@ -2,6 +2,7 @@ using Gee;
 using Gtk;
 
 using Dino.Entities;
+using Xmpp;
 
 namespace Dino.Ui {
 
@@ -36,7 +37,7 @@ public class AddConferenceDialog : Gtk.Dialog {
         setup_conference_details_view();
         show_jid_add_view();
 
-        stream_interactor.get_module(MucManager.IDENTITY).joined.connect((account, jid, nick) => { Idle.add(() => { on_joined(account, jid, nick); return false; } ); });
+        stream_interactor.get_module(MucManager.IDENTITY).joined.connect(on_joined);
     }
 
     private void show_jid_add_view() {
@@ -122,14 +123,13 @@ public class AddConferenceDialog : Gtk.Dialog {
         ConferenceListRow? conference_row = conference_list.get_selected_row() as ConferenceListRow;
         if (conference_row != null) {
             details_fragment.account = conference_row.account;
-            details_fragment.jid = conference_row.bookmark.jid;
+            details_fragment.jid = conference_row.bookmark.jid.to_string();
             details_fragment.nick = conference_row.bookmark.nick;
             if (conference_row.bookmark.password != null) details_fragment.password = conference_row.bookmark.password;
             ok_button.grab_focus();
         } else if (row != null) {
             details_fragment.account = row.account;
             details_fragment.jid = row.jid.to_string();
-            details_fragment.set_editable();
         }
         show_conference_details_view();
     }

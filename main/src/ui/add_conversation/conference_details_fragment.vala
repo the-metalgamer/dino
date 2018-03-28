@@ -2,10 +2,11 @@ using Gdk;
 using Gtk;
 
 using Dino.Entities;
+using Xmpp;
 
 namespace Dino.Ui {
 
-[GtkTemplate (ui = "/im/dino/add_conversation/conference_details_fragment.ui")]
+[GtkTemplate (ui = "/im/dino/Dino/add_conversation/conference_details_fragment.ui")]
 protected class ConferenceDetailsFragment : Box {
 
     public bool done {
@@ -22,6 +23,10 @@ protected class ConferenceDetailsFragment : Box {
         set {
             accounts_label.label = value.bare_jid.to_string();
             account_combobox.selected = value;
+            if (nick == null && value.alias != null) {
+                nick = value.alias;
+            }
+            accounts_stack.set_visible_child_name("label");
         }
     }
     public string jid {
@@ -29,6 +34,7 @@ protected class ConferenceDetailsFragment : Box {
         set {
             jid_label.label = value;
             jid_entry.text = value;
+            jid_stack.set_visible_child_name("label");
         }
     }
     public string? nick {
@@ -36,6 +42,7 @@ protected class ConferenceDetailsFragment : Box {
         set {
             nick_label.label = value ?? "";
             nick_entry.text = value ?? "";
+            nick_stack.set_visible_child_name("label");
         }
     }
     public string? password {
@@ -43,6 +50,7 @@ protected class ConferenceDetailsFragment : Box {
         set {
             password_label.label = value;
             password_entry.text = value;
+            nick_stack.set_visible_child_name("label");
         }
     }
 
@@ -80,11 +88,6 @@ protected class ConferenceDetailsFragment : Box {
 
         account_combobox.initialize(stream_interactor);
 
-        accounts_stack.set_visible_child_name("label");
-        jid_stack.set_visible_child_name("label");
-        nick_stack.set_visible_child_name("label");
-        password_stack.set_visible_child_name("label");
-
         accounts_button.clicked.connect(() => { set_active_stack(accounts_stack); });
         jid_button.clicked.connect(() => { set_active_stack(jid_stack); });
         nick_button.clicked.connect(() => { set_active_stack(nick_stack); });
@@ -99,29 +102,14 @@ protected class ConferenceDetailsFragment : Box {
         jid_entry.key_release_event.connect(() => { done = true; return false; }); // just for notifying
         nick_entry.key_release_event.connect(() => { done = true; return false; });
 
-        stream_interactor.get_module(MucManager.IDENTITY).enter_error.connect((account, jid, error) => {
-            Idle.add(() => {
-                on_enter_error(account, jid, error);
-                return false;
-            });
-        });
+        stream_interactor.get_module(MucManager.IDENTITY).enter_error.connect(on_enter_error);
         notification_button.clicked.connect(() => { notification_revealer.set_reveal_child(false); });
         ok_button.clicked.connect(() => {
-            ok_button.label = _("Joining...");
+            ok_button.label = _("Joining…");
             ok_button.sensitive = false;
         });
-    }
 
-    public void set_editable() {
-        nick_stack.set_visible_child_name("entry");
-        password_stack.set_visible_child_name("entry");
-    }
-
-    public void reset_editable() {
-        jid_stack.set_visible_child_name("label");
-        accounts_stack.set_visible_child_name("label");
-        nick_stack.set_visible_child_name("label");
-        password_stack.set_visible_child_name("label");
+        clear();
     }
 
     public void clear() {
@@ -132,6 +120,13 @@ protected class ConferenceDetailsFragment : Box {
         password_stack.visible = false;
         notification_revealer.set_reveal_child(false);
         reset_editable();
+    }
+
+    public void reset_editable() {
+        jid_stack.set_visible_child_name("entry");
+        accounts_stack.set_visible_child_name("entry");
+        nick_stack.set_visible_child_name("entry");
+        password_stack.set_visible_child_name("entry");
     }
 
     private void on_enter_error(Account account, Jid jid, Xmpp.Xep.Muc.MucEnterError error) {
@@ -151,12 +146,12 @@ protected class ConferenceDetailsFragment : Box {
             case Xmpp.Xep.Muc.MucEnterError.CREATION_RESTRICTED:
                 label_text = _("Not allowed to create room"); break;
             case Xmpp.Xep.Muc.MucEnterError.NOT_IN_MEMBER_LIST:
-                label_text = _("Room is members only"); break;
+                label_text = _("Members-only room"); break;
             case Xmpp.Xep.Muc.MucEnterError.USE_RESERVED_ROOMNICK:
             case Xmpp.Xep.Muc.MucEnterError.NICK_CONFLICT:
                 label_text = _("Choose a different nick"); break;
             case Xmpp.Xep.Muc.MucEnterError.OCCUPANT_LIMIT_REACHED:
-                label_text = _("Room has too many occupants"); break;
+                label_text = _("Too many occupants in room"); break;
         }
         notification_label.label = label_text;
         notification_revealer.set_reveal_child(true);

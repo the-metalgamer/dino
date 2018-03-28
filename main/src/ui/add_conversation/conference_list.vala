@@ -21,11 +21,8 @@ protected class ConferenceList : FilterableList {
         set_sort_func(sort);
 
         stream_interactor.get_module(MucManager.IDENTITY).bookmarks_updated.connect((account, conferences) => {
-            Idle.add(() => {
-                lists[account] = conferences;
-                refresh_conferences();
-                return false;
-            });
+            lists[account] = conferences;
+            refresh_conferences();
         });
 
         foreach (Account account in stream_interactor.get_accounts()) {
@@ -42,12 +39,13 @@ protected class ConferenceList : FilterableList {
         }
     }
 
-    private void on_conference_bookmarks_received(Core.XmppStream stream, Account account, Gee.List<Xep.Bookmarks.Conference> conferences) {
-        Idle.add(() => {
+    private void on_conference_bookmarks_received(XmppStream stream, Account account, Gee.List<Xep.Bookmarks.Conference>? conferences) {
+        if (conferences == null) {
+            lists.unset(account);
+        } else {
             lists[account] = conferences;
-            refresh_conferences();
-            return false;
-        });
+        }
+        refresh_conferences();
     }
 
     private void header(ListBoxRow row, ListBoxRow? before_row) {
@@ -83,20 +81,20 @@ internal class ConferenceListRow : ListRow {
     public Xep.Bookmarks.Conference bookmark;
 
     public ConferenceListRow(StreamInteractor stream_interactor, Xep.Bookmarks.Conference bookmark, Account account) {
-        this.jid = new Jid(bookmark.jid);
+        this.jid = bookmark.jid;
         this.account = account;
         this.bookmark = bookmark;
 
-        name_label.label = bookmark.name ?? bookmark.jid;
+        name_label.label = bookmark.name ?? bookmark.jid.to_string();
         if (stream_interactor.get_accounts().size > 1) {
             via_label.label = "via " + account.bare_jid.to_string();
-        } else if (bookmark.name != null && bookmark.name != bookmark.jid) {
-            via_label.label = bookmark.jid;
+        } else if (bookmark.name != null && bookmark.name != bookmark.jid.to_string()) {
+            via_label.label = bookmark.jid.to_string();
         } else {
             via_label.visible = false;
         }
 
-        image.set_from_pixbuf((new AvatarGenerator(35, 35)).set_stateless(true).draw_jid(stream_interactor, jid, account));
+        image.set_jid(stream_interactor, jid, account);
     }
 }
 

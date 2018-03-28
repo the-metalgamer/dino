@@ -1,4 +1,5 @@
 using Dino.Entities;
+using Xmpp;
 
 namespace Dino.Plugins {
 
@@ -98,8 +99,8 @@ public abstract class MetaConversationItem : Object {
 }
 
 public interface ConversationItemCollection : Object {
-    public abstract void insert_item(MetaConversationItem item);
-    public abstract void remove_item(MetaConversationItem item);
+    public signal void insert_item(MetaConversationItem item);
+    public signal void remove_item(MetaConversationItem item);
 }
 
 public interface MessageDisplayProvider : Object {

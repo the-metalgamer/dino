@@ -2,10 +2,11 @@ using Gee;
 using Gtk;
 
 using Dino.Entities;
+using Xmpp;
 
 namespace Dino.Ui {
 
-[GtkTemplate (ui = "/im/dino/add_conversation/add_groupchat_dialog.ui")]
+[GtkTemplate (ui = "/im/dino/Dino/add_conversation/add_groupchat_dialog.ui")]
 protected class AddGroupchatDialog : Gtk.Dialog {
 
     [GtkChild] private Stack accounts_stack;
@@ -18,7 +19,7 @@ protected class AddGroupchatDialog : Gtk.Dialog {
     [GtkChild] private Entry nick_entry;
 
     private StreamInteractor stream_interactor;
-    private Xmpp.Xep.Bookmarks.Conference? edit_confrence = null;
+    private Xmpp.Xep.Bookmarks.Conference? edit_conference = null;
     private bool alias_entry_changed = false;
 
     public AddGroupchatDialog(StreamInteractor stream_interactor) {
@@ -37,13 +38,13 @@ protected class AddGroupchatDialog : Gtk.Dialog {
 
     public AddGroupchatDialog.for_conference(StreamInteractor stream_interactor, Account account, Xmpp.Xep.Bookmarks.Conference conference) {
         this(stream_interactor);
-        edit_confrence = conference;
+        edit_conference = conference;
         ok_button.label = _("Save");
         ok_button.sensitive = true;
         accounts_stack.set_visible_child_name("label");
         account_label.label = account.bare_jid.to_string();
         account_combobox.selected = account;
-        jid_entry.text = conference.jid;
+        jid_entry.text = conference.jid.to_string();
         nick_entry.text = conference.nick ?? "";
         alias_entry.text = conference.name;
     }
@@ -64,13 +65,13 @@ protected class AddGroupchatDialog : Gtk.Dialog {
     }
 
     private void on_ok_button_clicked() {
-        Xmpp.Xep.Bookmarks.Conference conference = new Xmpp.Xep.Bookmarks.Conference(jid_entry.text);
+        Xmpp.Xep.Bookmarks.Conference conference = new Xmpp.Xep.Bookmarks.Conference(Jid.parse(jid_entry.text));
         conference.nick = nick_entry.text != "" ? nick_entry.text : null;
         conference.name = alias_entry.text;
-        if (edit_confrence == null) {
+        if (edit_conference == null) {
             stream_interactor.get_module(MucManager.IDENTITY).add_bookmark(account_combobox.selected, conference);
         } else {
-            stream_interactor.get_module(MucManager.IDENTITY).replace_bookmark(account_combobox.selected, edit_confrence, conference);
+            stream_interactor.get_module(MucManager.IDENTITY).replace_bookmark(account_combobox.selected, edit_conference, conference);
         }
         close();
     }

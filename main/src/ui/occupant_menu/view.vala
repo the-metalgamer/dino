@@ -2,6 +2,7 @@ using Gee;
 using Gtk;
 
 using Dino.Entities;
+using Xmpp;
 
 namespace Dino.Ui.OccupantMenu {
 public class View : Popover {
@@ -94,7 +95,7 @@ public class View : Popover {
             kick_button.clicked.connect(kick_button_clicked);
         }
 
-        if (jid_menu != null) stack.remove(jid_menu);
+        if (jid_menu != null) jid_menu.destroy();
         stack.add_named(outer_box, "menu");
         stack.visible_child_name = "menu";
         jid_menu = outer_box;
